@@ -3,6 +3,7 @@
 -- Modern black-and-white UI library
 
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Library = {}
 
@@ -17,6 +18,7 @@ local Theme = {
     Border = Color3.fromRGB(90, 90, 100),
 }
 
+-- Tween
 local function tween(object, duration, properties)
     local info = TweenInfo.new(
         duration,
@@ -34,6 +36,7 @@ local function tween(object, duration, properties)
     return animation
 end
 
+-- Rounded corners
 local function addCorner(object, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
@@ -41,6 +44,7 @@ local function addCorner(object, radius)
     return corner
 end
 
+-- Border
 local function addStroke(object)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Theme.Border
@@ -62,6 +66,7 @@ function Library:CreateWindow(options)
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+    -- Main frame
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.Size = UDim2.fromOffset(540, 350)
@@ -74,7 +79,7 @@ function Library:CreateWindow(options)
     addCorner(main, 14)
     addStroke(main)
 
-    -- Glass-like background
+    -- Glass gradient
     local glass = Instance.new("UIGradient")
     glass.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
@@ -83,7 +88,7 @@ function Library:CreateWindow(options)
     glass.Rotation = 45
     glass.Parent = main
 
-    -- Title bar
+    -- Title
     local title = Instance.new("TextLabel")
     title.Name = "Title"
     title.Size = UDim2.new(1, -30, 0, 45)
@@ -95,6 +100,50 @@ function Library:CreateWindow(options)
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = main
+
+    -- Draggable title bar
+    local dragBar = Instance.new("Frame")
+    dragBar.Name = "DragBar"
+    dragBar.Size = UDim2.new(1, 0, 0, 52)
+    dragBar.BackgroundTransparency = 1
+    dragBar.Parent = main
+
+    local dragging = false
+    local dragStart
+    local startPosition
+
+    dragBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+
+            dragging = true
+            dragStart = input.Position
+            startPosition = main.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+
+            local delta = input.Position - dragStart
+
+            main.Position = UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset + delta.X,
+                startPosition.Y.Scale,
+                startPosition.Y.Offset + delta.Y
+            )
+        end
+    end)
 
     -- Tab navigation
     local tabHolder = Instance.new("Frame")
@@ -119,7 +168,7 @@ function Library:CreateWindow(options)
     tabPadding.PaddingRight = UDim.new(0, 8)
     tabPadding.Parent = tabHolder
 
-    -- Content area
+    -- Content
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.Size = UDim2.new(1, -175, 1, -65)
@@ -134,6 +183,7 @@ function Library:CreateWindow(options)
     local window = {}
     local selectedTab = nil
 
+    -- Add tab
     function window:AddTab(tabName)
         local tabButton = Instance.new("TextButton")
         tabButton.Name = tabName .. "Tab"
@@ -149,6 +199,7 @@ function Library:CreateWindow(options)
 
         addCorner(tabButton, 8)
 
+        -- Page
         local page = Instance.new("ScrollingFrame")
         page.Name = tabName .. "Page"
         page.Size = UDim2.new(1, -16, 1, -16)
@@ -174,12 +225,15 @@ function Library:CreateWindow(options)
 
         local tab = {}
 
+        -- Select tab
         local function selectThisTab()
             if selectedTab then
                 selectedTab.Page.Visible = false
+
                 tween(selectedTab.Button, 0.2, {
                     BackgroundColor3 = Theme.Element
                 })
+
                 selectedTab.Button.TextColor3 = Theme.Muted
             end
 
@@ -189,9 +243,11 @@ function Library:CreateWindow(options)
             }
 
             page.Visible = true
+
             tween(tabButton, 0.2, {
                 BackgroundColor3 = Theme.Hover
             })
+
             tabButton.TextColor3 = Theme.Text
         end
 
@@ -213,6 +269,7 @@ function Library:CreateWindow(options)
             end
         end)
 
+        -- Add button
         function tab:AddButton(options)
             options = options or {}
 
@@ -264,6 +321,68 @@ function Library:CreateWindow(options)
             return button
         end
 
+        -- Add textbox
+        function tab:AddTextbox(options)
+            options = options or {}
+
+            local holder = Instance.new("Frame")
+            holder.Name = options.Name or "Textbox"
+            holder.Size = UDim2.new(1, -4, 0, 62)
+            holder.BackgroundColor3 = Theme.Element
+            holder.BackgroundTransparency = 0.1
+            holder.BorderSizePixel = 0
+            holder.Parent = page
+
+            addCorner(holder, 9)
+            addStroke(holder)
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -16, 0, 20)
+            label.Position = UDim2.fromOffset(8, 4)
+            label.BackgroundTransparency = 1
+            label.Text = options.Name or "Textbox"
+            label.TextColor3 = Theme.Muted
+            label.TextSize = 12
+            label.Font = Enum.Font.GothamMedium
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = holder
+
+            local textbox = Instance.new("TextBox")
+            textbox.Name = "Input"
+            textbox.Size = UDim2.new(1, -16, 0, 27)
+            textbox.Position = UDim2.fromOffset(8, 27)
+            textbox.BackgroundColor3 = Theme.Panel
+            textbox.TextColor3 = Theme.Text
+            textbox.PlaceholderColor3 = Theme.Muted
+            textbox.PlaceholderText = options.Placeholder or "Type here..."
+            textbox.Text = options.Default or ""
+            textbox.TextSize = 13
+            textbox.Font = Enum.Font.Gotham
+            textbox.ClearTextOnFocus = false
+            textbox.BorderSizePixel = 0
+            textbox.Parent = holder
+
+            addCorner(textbox, 6)
+
+            textbox.Focused:Connect(function()
+                tween(textbox, 0.2, {
+                    BackgroundColor3 = Theme.Hover
+                })
+            end)
+
+            textbox.FocusLost:Connect(function(enterPressed)
+                tween(textbox, 0.2, {
+                    BackgroundColor3 = Theme.Panel
+                })
+
+                if typeof(options.Callback) == "function" then
+                    task.spawn(options.Callback, textbox.Text, enterPressed)
+                end
+            end)
+
+            return textbox
+        end
+
         if not selectedTab then
             selectThisTab()
         end
@@ -273,7 +392,7 @@ function Library:CreateWindow(options)
 
     gui.Parent = playerGui
 
-    -- Smooth window entrance
+    -- Window entrance
     main.BackgroundTransparency = 1
     main.Size = UDim2.fromOffset(510, 325)
 
