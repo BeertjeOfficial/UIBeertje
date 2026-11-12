@@ -1,9 +1,3 @@
---[[
-	Cheese UI
-	A lightweight, animated glass UI library for Roblox
-	Black & white glass aesthetic with rich interactions
-]]
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -14,9 +8,6 @@ local HttpService = game:GetService("HttpService")
 local Library = {}
 Library.__index = Library
 
--- ─────────────────────────────────────────────
--- Theme
--- ─────────────────────────────────────────────
 local Theme = {
 	Background   = Color3.fromRGB(14, 14, 17),
 	Panel        = Color3.fromRGB(20, 20, 24),
@@ -34,15 +25,11 @@ local Theme = {
 	Info         = Color3.fromRGB(120, 160, 220),
 }
 
--- ─────────────────────────────────────────────
--- Helpers
--- ─────────────────────────────────────────────
 local activeTweens = setmetatable({}, { __mode = "k" })
 
 local function tween(obj, duration, props, style, direction)
 	if not obj or not obj.Parent then return end
 
-	-- Cancel any running tweens on this instance so animations never cut mid-way
 	local running = activeTweens[obj]
 	if running then
 		for _, t in pairs(running) do
@@ -128,9 +115,6 @@ local function ripple(parent, x, y)
 	end)
 end
 
--- ─────────────────────────────────────────────
--- Notification System
--- ─────────────────────────────────────────────
 local NotificationContainer = nil
 
 local function ensureNotificationContainer()
@@ -141,10 +125,10 @@ local function ensureNotificationContainer()
 	local player = Players.LocalPlayer
 	local playerGui = player:WaitForChild("PlayerGui")
 
-	local gui = playerGui:FindFirstChild("CheeseNotifications")
+	local gui = playerGui:FindFirstChild("LegalizeexploitingNotifications")
 	if not gui then
 		gui = Instance.new("ScreenGui")
-		gui.Name = "CheeseNotifications"
+		gui.Name = "LegalizeexploitingNotifications"
 		gui.ResetOnSpawn = false
 		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 		gui.DisplayOrder = 100
@@ -175,7 +159,7 @@ function Library:Notify(opts)
 	local title = opts.Title or "Notification"
 	local content = opts.Content or opts.Text or ""
 	local duration = opts.Duration or 4
-	local notifType = opts.Type or "Info" -- Info, Success, Warning, Error
+	local notifType = opts.Type or "Info"
 
 	local accentColor = Theme.Info
 	if notifType == "Success" then
@@ -199,7 +183,6 @@ function Library:Notify(opts)
 	addCorner(notif, 12)
 	addStroke(notif, Theme.Border, 0.4, 1.1)
 
-	-- Accent bar on left
 	local accent = Instance.new("Frame")
 	accent.Size = UDim2.fromOffset(4, 0)
 	accent.Position = UDim2.fromOffset(0, 0)
@@ -234,7 +217,6 @@ function Library:Notify(opts)
 	contentLabel.TextWrapped = true
 	contentLabel.Parent = notif
 
-	-- Measure content height
 	local textSize = TextService:GetTextSize(
 		content, 12, Enum.Font.Gotham,
 		Vector2.new(272, 1000)
@@ -245,7 +227,6 @@ function Library:Notify(opts)
 	contentLabel.Size = UDim2.new(1, -28, 0, contentHeight)
 	notif.Size = UDim2.fromOffset(300, 0)
 
-	-- Close button
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.fromOffset(24, 24)
 	closeBtn.Position = UDim2.new(1, -32, 0, 10)
@@ -256,7 +237,6 @@ function Library:Notify(opts)
 	closeBtn.Font = Enum.Font.GothamBold
 	closeBtn.Parent = notif
 
-	-- Progress bar at bottom
 	local progress = Instance.new("Frame")
 	progress.Size = UDim2.new(1, 0, 0, 2)
 	progress.Position = UDim2.new(0, 0, 1, -2)
@@ -265,7 +245,6 @@ function Library:Notify(opts)
 	progress.BorderSizePixel = 0
 	progress.Parent = notif
 
-	-- Animate in
 	notif.Position = UDim2.new(1, 40, 0, 0)
 	tween(notif, 0.4, {
 		Size = UDim2.fromOffset(300, totalHeight),
@@ -273,7 +252,6 @@ function Library:Notify(opts)
 	}, Enum.EasingStyle.Back)
 	tween(accent, 0.35, { Size = UDim2.fromOffset(4, totalHeight) })
 
-	-- Progress countdown
 	tween(progress, duration, {
 		Size = UDim2.new(0, 0, 0, 2)
 	}, Enum.EasingStyle.Linear)
@@ -304,32 +282,27 @@ function Library:Notify(opts)
 	return notif
 end
 
--- ─────────────────────────────────────────────
--- Window
--- ─────────────────────────────────────────────
 function Library:CreateWindow(options)
 	options = options or {}
-	local titleText = options.Title or "Cheese UI"
+	local titleText = options.Title or "Legalizeexploiting UI"
 	local width = options.Width or 600
 	local height = options.Height or 400
 
 	local player = Players.LocalPlayer
 	local playerGui = player:WaitForChild("PlayerGui")
 
-	-- Clean previous instance
-	local existing = playerGui:FindFirstChild("CheeseUI")
+	local existing = playerGui:FindFirstChild("LegalizeexploitingUI")
 	if existing then
 		existing:Destroy()
 	end
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "CheeseUI"
+	gui.Name = "LegalizeexploitingUI"
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.IgnoreGuiInset = true
 	gui.Parent = playerGui
 
-	-- Main container
 	local main = Instance.new("Frame")
 	main.Name = "Main"
 	main.Size = UDim2.fromOffset(width - 50, height - 40)
@@ -342,7 +315,6 @@ function Library:CreateWindow(options)
 	addCorner(main, 14)
 	addStroke(main, Theme.Border, 0.4, 1.2)
 
-	-- Glass gradient
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 34, 40)),
@@ -352,7 +324,6 @@ function Library:CreateWindow(options)
 	gradient.Rotation = 110
 	gradient.Parent = main
 
-	-- Title bar
 	local titleBar = Instance.new("Frame")
 	titleBar.Name = "TitleBar"
 	titleBar.Size = UDim2.new(1, 0, 0, 48)
@@ -371,7 +342,6 @@ function Library:CreateWindow(options)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = titleBar
 
-	-- Minimize button
 	local minBtn = Instance.new("TextButton")
 	minBtn.Name = "Minimize"
 	minBtn.Size = UDim2.fromOffset(28, 28)
@@ -386,7 +356,6 @@ function Library:CreateWindow(options)
 	minBtn.Parent = titleBar
 	addCorner(minBtn, 7)
 
-	-- Close button
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Name = "Close"
 	closeBtn.Size = UDim2.fromOffset(28, 28)
@@ -443,7 +412,6 @@ function Library:CreateWindow(options)
 		end)
 	end)
 
-	-- Dragging
 	local dragging, dragStart, startPos
 	titleBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -470,7 +438,6 @@ function Library:CreateWindow(options)
 		end
 	end)
 
-	-- Sidebar
 	local sidebar = Instance.new("ScrollingFrame")
 	sidebar.Name = "Sidebar"
 	sidebar.Size = UDim2.new(0, 148, 1, -62)
@@ -494,7 +461,6 @@ function Library:CreateWindow(options)
 		sidebar.CanvasSize = UDim2.new(0, 0, 0, sideLayout.AbsoluteContentSize.Y + 20)
 	end)
 
-	-- Content
 	local content = Instance.new("Frame")
 	content.Name = "Content"
 	content.Size = UDim2.new(1, -176, 1, -62)
@@ -507,7 +473,6 @@ function Library:CreateWindow(options)
 	addCorner(content, 11)
 	addStroke(content, Theme.Border, 0.7, 1)
 
-	-- Window API
 	local window = {}
 	local tabs = {}
 	local selectedTab = nil
@@ -632,7 +597,6 @@ function Library:CreateWindow(options)
 				tween(prev.Indicator, 0.25, { Size = UDim2.fromOffset(3, 0) }, Enum.EasingStyle.Quint)
 				prev.Label.TextColor3 = Theme.Muted
 
-				-- Smooth hide previous page (no hard cut)
 				local oldPage = prev.Page
 				tween(oldPage, 0.2, {
 					Position = UDim2.fromOffset(8, 16)
@@ -685,7 +649,6 @@ function Library:CreateWindow(options)
 			selectTab()
 		end
 
-		-- Tab API
 		local tab = {}
 		local elementOrder = 0
 
@@ -694,7 +657,6 @@ function Library:CreateWindow(options)
 			return elementOrder
 		end
 
-		-- ── Button ──────────────────────────────
 		function tab:AddButton(opts)
 			opts = opts or {}
 			local name = opts.Name or "Button"
@@ -771,7 +733,6 @@ function Library:CreateWindow(options)
 			return btn
 		end
 
-		-- ── Toggle ──────────────────────────────
 		function tab:AddToggle(opts)
 			opts = opts or {}
 			local name = opts.Name or "Toggle"
@@ -860,13 +821,12 @@ function Library:CreateWindow(options)
 			end)
 
 			return {
-				-- Set(val, silent?) — silent skips callback (for UI sync after reset)
+
 				Set = function(_, val, silent) setState(val, true, silent) end,
 				Get = function() return state end
 			}
 		end
 
-		-- ── Textbox ─────────────────────────────
 		function tab:AddTextbox(opts)
 			opts = opts or {}
 			local name = opts.Name or "Textbox"
@@ -936,7 +896,6 @@ function Library:CreateWindow(options)
 			return box
 		end
 
-		-- ── Slider ──────────────────────────────
 		function tab:AddSlider(opts)
 			opts = opts or {}
 			local name = opts.Name or "Slider"
@@ -1058,7 +1017,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Color Picker ────────────────────────
 		function tab:AddColorPicker(opts)
 			opts = opts or {}
 			local name = opts.Name or "Color"
@@ -1101,7 +1059,6 @@ function Library:CreateWindow(options)
 			addCorner(preview, 7)
 			addStroke(preview, Theme.Border, 0.5, 1)
 
-			-- Expanded picker area
 			local picker = Instance.new("Frame")
 			picker.Name = "Picker"
 			picker.Size = UDim2.new(1, -16, 0, 0)
@@ -1110,7 +1067,6 @@ function Library:CreateWindow(options)
 			picker.ClipsDescendants = true
 			picker.Parent = holder
 
-			-- SV square
 			local svFrame = Instance.new("Frame")
 			svFrame.Size = UDim2.fromOffset(160, 120)
 			svFrame.Position = UDim2.fromOffset(0, 0)
@@ -1153,7 +1109,6 @@ function Library:CreateWindow(options)
 			addCorner(svCursor, 6)
 			addStroke(svCursor, Color3.new(0, 0, 0), 0.3, 1.5)
 
-			-- Hue slider
 			local hueTrack = Instance.new("Frame")
 			hueTrack.Size = UDim2.fromOffset(18, 120)
 			hueTrack.Position = UDim2.fromOffset(172, 0)
@@ -1186,7 +1141,6 @@ function Library:CreateWindow(options)
 			addCorner(hueCursor, 3)
 			addStroke(hueCursor, Color3.new(0, 0, 0), 0.4, 1)
 
-			-- Hex display
 			local hexLabel = Instance.new("TextLabel")
 			hexLabel.Size = UDim2.fromOffset(100, 22)
 			hexLabel.Position = UDim2.fromOffset(200, 50)
@@ -1293,7 +1247,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Label ───────────────────────────────
 		function tab:AddLabel(opts)
 			opts = opts or {}
 			local text = opts.Text or opts.Name or "Label"
@@ -1324,7 +1277,6 @@ function Library:CreateWindow(options)
 			return label
 		end
 
-		-- ── Paragraph ───────────────────────────
 		function tab:AddParagraph(opts)
 			opts = opts or {}
 			local titleText = opts.Title or opts.Name or "Info"
@@ -1385,7 +1337,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Section ─────────────────────────────
 		function tab:AddSection(opts)
 			opts = opts or {}
 			local name = opts.Name or "Section"
@@ -1418,7 +1369,6 @@ function Library:CreateWindow(options)
 			return holder
 		end
 
-		-- ── Separator ───────────────────────────
 		function tab:AddSeparator()
 			local sep = Instance.new("Frame")
 			sep.Name = "Separator"
@@ -1431,13 +1381,12 @@ function Library:CreateWindow(options)
 			return sep
 		end
 
-		-- ── Keybind (keyboard + mouse buttons) ─
 		function tab:AddKeybind(opts)
 			opts = opts or {}
 			local name = opts.Name or "Keybind"
 			local default = opts.Default or Enum.KeyCode.Unknown
 			local callback = opts.Callback
-			local current = default -- KeyCode or UserInputType (for mouse)
+			local current = default
 
 			local function displayName(bind)
 				if typeof(bind) == "EnumItem" then
@@ -1506,7 +1455,7 @@ function Library:CreateWindow(options)
 					TextColor3 = Theme.Muted
 				})
 				if typeof(callback) == "function" then
-					-- Pass KeyCode/UserInputType and a string name for modules that want strings
+
 					task.spawn(callback, bind, displayName(bind))
 				end
 			end
@@ -1525,9 +1474,8 @@ function Library:CreateWindow(options)
 			UserInputService.InputBegan:Connect(function(input, gpe)
 				if not listening then return end
 
-				-- Keyboard
 				if input.UserInputType == Enum.UserInputType.Keyboard then
-					-- Escape cancels
+
 					if input.KeyCode == Enum.KeyCode.Escape then
 						listening = false
 						keyBtn.Text = displayName(current)
@@ -1541,7 +1489,6 @@ function Library:CreateWindow(options)
 					return
 				end
 
-				-- Mouse buttons (skip the click that opened listening)
 				if input.UserInputType == Enum.UserInputType.MouseButton1
 					or input.UserInputType == Enum.UserInputType.MouseButton2
 					or input.UserInputType == Enum.UserInputType.MouseButton3 then
@@ -1563,7 +1510,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Dropdown ────────────────────────────
 		function tab:AddDropdown(opts)
 			opts = opts or {}
 			local name = opts.Name or "Dropdown"
@@ -1680,7 +1626,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Progress Bar ────────────────────────
 		function tab:AddProgressBar(opts)
 			opts = opts or {}
 			local name = opts.Name or "Progress"
@@ -1748,7 +1693,6 @@ function Library:CreateWindow(options)
 			}
 		end
 
-		-- ── Button Group ────────────────────────
 		function tab:AddButtonGroup(opts)
 			opts = opts or {}
 			local buttons = opts.Buttons or {}
@@ -1809,7 +1753,6 @@ function Library:CreateWindow(options)
 		return tab
 	end
 
-	-- Entrance animation (smooth, no cut-off)
 	main.Size = UDim2.fromOffset(width - 50, height - 40)
 	main.BackgroundTransparency = 1
 	tween(main, 0.5, {
