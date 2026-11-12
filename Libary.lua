@@ -37,13 +37,40 @@ local Theme = {
 -- ─────────────────────────────────────────────
 -- Helpers
 -- ─────────────────────────────────────────────
+local activeTweens = setmetatable({}, { __mode = "k" })
+
 local function tween(obj, duration, props, style, direction)
+	if not obj or not obj.Parent then return end
+
+	-- Cancel any running tweens on this instance so animations never cut mid-way
+	local running = activeTweens[obj]
+	if running then
+		for _, t in pairs(running) do
+			pcall(function() t:Cancel() end)
+		end
+	end
+	activeTweens[obj] = {}
+
 	local info = TweenInfo.new(
 		duration,
 		style or Enum.EasingStyle.Quint,
 		direction or Enum.EasingDirection.Out
 	)
 	local t = TweenService:Create(obj, info, props)
+	table.insert(activeTweens[obj], t)
+
+	t.Completed:Connect(function()
+		local list = activeTweens[obj]
+		if list then
+			for i, v in ipairs(list) do
+				if v == t then
+					table.remove(list, i)
+					break
+				end
+			end
+		end
+	end)
+
 	t:Play()
 	return t
 end
@@ -496,16 +523,16 @@ function Library:CreateWindow(options)
 
 		if visible then
 			main.Visible = true
-			tween(main, 0.35, {
+			tween(main, 0.4, {
 				Size = fullSize,
 				BackgroundTransparency = 0.06
-			}, Enum.EasingStyle.Back)
+			}, Enum.EasingStyle.Quint)
 		else
-			tween(main, 0.28, {
-				Size = UDim2.fromOffset(width - 50, height - 40),
+			tween(main, 0.32, {
+				Size = UDim2.fromOffset(width - 40, height - 30),
 				BackgroundTransparency = 1
 			}, Enum.EasingStyle.Quint)
-			task.delay(0.3, function()
+			task.delay(0.34, function()
 				if not visible then
 					main.Visible = false
 				end
@@ -598,35 +625,40 @@ function Library:CreateWindow(options)
 
 			if selectedTab then
 				local prev = selectedTab
-				tween(prev.Button, 0.22, {
+				tween(prev.Button, 0.25, {
 					BackgroundColor3 = Theme.Element,
 					BackgroundTransparency = 0.55
 				}, Enum.EasingStyle.Quart)
-				tween(prev.Indicator, 0.2, { Size = UDim2.fromOffset(3, 0) })
+				tween(prev.Indicator, 0.25, { Size = UDim2.fromOffset(3, 0) }, Enum.EasingStyle.Quint)
 				prev.Label.TextColor3 = Theme.Muted
 
-				prev.Page.Visible = true
-				tween(prev.Page, 0.14, { Position = UDim2.fromOffset(8, 14) })
-				task.delay(0.12, function()
-					prev.Page.Visible = false
-					prev.Page.Position = UDim2.fromOffset(8, 8)
+				-- Smooth hide previous page (no hard cut)
+				local oldPage = prev.Page
+				tween(oldPage, 0.2, {
+					Position = UDim2.fromOffset(8, 16)
+				}, Enum.EasingStyle.Quad)
+				task.delay(0.18, function()
+					if selectedTab ~= prev then
+						oldPage.Visible = false
+						oldPage.Position = UDim2.fromOffset(8, 8)
+					end
 				end)
 			end
 
 			selectedTab = tabData
 
-			tween(tabBtn, 0.25, {
+			tween(tabBtn, 0.3, {
 				BackgroundColor3 = Theme.Hover,
 				BackgroundTransparency = 0.1
-			}, Enum.EasingStyle.Back)
-			tween(indicator, 0.28, {
+			}, Enum.EasingStyle.Quint)
+			tween(indicator, 0.32, {
 				Size = UDim2.fromOffset(3, 20)
-			}, Enum.EasingStyle.Back)
+			}, Enum.EasingStyle.Quint)
 			tabLabel.TextColor3 = Theme.Text
 
-			page.Position = UDim2.fromOffset(8, 18)
+			page.Position = UDim2.fromOffset(8, 20)
 			page.Visible = true
-			tween(page, 0.28, {
+			tween(page, 0.32, {
 				Position = UDim2.fromOffset(8, 8)
 			}, Enum.EasingStyle.Quint)
 		end
@@ -692,30 +724,40 @@ function Library:CreateWindow(options)
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.Parent = btn
 
+			local pressed = false
+
 			btn.MouseEnter:Connect(function()
-				tween(btn, 0.18, {
+				if pressed then return end
+				tween(btn, 0.2, {
 					BackgroundColor3 = Theme.Hover,
 					BackgroundTransparency = 0.05
 				})
 			end)
 
 			btn.MouseLeave:Connect(function()
-				tween(btn, 0.18, {
+				pressed = false
+				tween(btn, 0.22, {
 					BackgroundColor3 = Theme.Element,
-					BackgroundTransparency = 0.2
+					BackgroundTransparency = 0.2,
+					Size = UDim2.new(1, 0, 0, 40)
 				})
 			end)
 
 			btn.MouseButton1Down:Connect(function()
-				tween(btn, 0.08, {
-					Size = UDim2.new(1, -4, 0, 37)
+				pressed = true
+				tween(btn, 0.1, {
+					Size = UDim2.new(1, -4, 0, 37),
+					BackgroundTransparency = 0
 				}, Enum.EasingStyle.Quad)
 			end)
 
 			btn.MouseButton1Up:Connect(function()
-				tween(btn, 0.18, {
-					Size = UDim2.new(1, 0, 0, 40)
-				}, Enum.EasingStyle.Back)
+				pressed = false
+				tween(btn, 0.22, {
+					Size = UDim2.new(1, 0, 0, 40),
+					BackgroundColor3 = Theme.Hover,
+					BackgroundTransparency = 0.05
+				}, Enum.EasingStyle.Quint)
 			end)
 
 			btn.MouseButton1Click:Connect(function()
@@ -1230,10 +1272,10 @@ function Library:CreateWindow(options)
 			toggleBtn.MouseButton1Click:Connect(function()
 				open = not open
 				local targetH = open and 180 or 40
-				tween(holder, 0.32, {
+				tween(holder, 0.38, {
 					Size = UDim2.new(1, 0, 0, targetH)
 				}, Enum.EasingStyle.Quint)
-				tween(picker, 0.32, {
+				tween(picker, 0.38, {
 					Size = UDim2.new(1, -16, 0, open and 130 or 0)
 				}, Enum.EasingStyle.Quint)
 			end)
@@ -1570,10 +1612,10 @@ function Library:CreateWindow(options)
 			toggleBtn.MouseButton1Click:Connect(function()
 				open = not open
 				local targetH = open and (40 + #list * 32) or 40
-				tween(holder, 0.28, {
+				tween(holder, 0.36, {
 					Size = UDim2.new(1, 0, 0, targetH)
 				}, Enum.EasingStyle.Quint)
-				tween(arrow, 0.22, { Rotation = open and 180 or 0 }, Enum.EasingStyle.Back)
+				tween(arrow, 0.3, { Rotation = open and 180 or 0 }, Enum.EasingStyle.Quint)
 			end)
 
 			return {
@@ -1714,11 +1756,13 @@ function Library:CreateWindow(options)
 		return tab
 	end
 
-	-- Entrance animation
-	tween(main, 0.45, {
+	-- Entrance animation (smooth, no cut-off)
+	main.Size = UDim2.fromOffset(width - 50, height - 40)
+	main.BackgroundTransparency = 1
+	tween(main, 0.5, {
 		Size = fullSize,
 		BackgroundTransparency = 0.06
-	}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 	return window
 end
