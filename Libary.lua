@@ -820,8 +820,8 @@ function Library:CreateWindow(options)
 			knob.Parent = track
 			addCorner(knob, 8)
 
-			local function setState(val, animate)
-				state = val
+			local function setState(val, animate, silent)
+				state = val and true or false
 				if animate ~= false then
 					tween(track, 0.22, {
 						BackgroundColor3 = state and Theme.Accent or Theme.ElementAlt,
@@ -837,7 +837,7 @@ function Library:CreateWindow(options)
 					knob.Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.fromOffset(3, 3)
 					knob.BackgroundColor3 = state and Theme.Background or Theme.Muted
 				end
-				if typeof(callback) == "function" then
+				if not silent and typeof(callback) == "function" then
 					task.spawn(callback, state)
 				end
 			end
@@ -860,7 +860,8 @@ function Library:CreateWindow(options)
 			end)
 
 			return {
-				Set = function(_, val) setState(val) end,
+				-- Set(val, silent?) — silent skips callback (for UI sync after reset)
+				Set = function(_, val, silent) setState(val, true, silent) end,
 				Get = function() return state end
 			}
 		end
@@ -1430,13 +1431,32 @@ function Library:CreateWindow(options)
 			return sep
 		end
 
-		-- ── Keybind ─────────────────────────────
+		-- ── Keybind (keyboard + mouse buttons) ─
 		function tab:AddKeybind(opts)
 			opts = opts or {}
 			local name = opts.Name or "Keybind"
 			local default = opts.Default or Enum.KeyCode.Unknown
 			local callback = opts.Callback
-			local current = default
+			local current = default -- KeyCode or UserInputType (for mouse)
+
+			local function displayName(bind)
+				if typeof(bind) == "EnumItem" then
+					if bind.EnumType == Enum.KeyCode then
+						if bind == Enum.KeyCode.Unknown then return "None" end
+						return bind.Name
+					end
+					if bind.EnumType == Enum.UserInputType then
+						if bind == Enum.UserInputType.MouseButton1 then return "M1" end
+						if bind == Enum.UserInputType.MouseButton2 then return "M2" end
+						if bind == Enum.UserInputType.MouseButton3 then return "M3" end
+						return bind.Name
+					end
+				end
+				if type(bind) == "string" then
+					return bind
+				end
+				return "None"
+			end
 
 			local holder = Instance.new("Frame")
 			holder.Name = name
@@ -1461,11 +1481,11 @@ function Library:CreateWindow(options)
 			label.Parent = holder
 
 			local keyBtn = Instance.new("TextButton")
-			keyBtn.Size = UDim2.fromOffset(70, 26)
-			keyBtn.Position = UDim2.new(1, -82, 0.5, -13)
+			keyBtn.Size = UDim2.fromOffset(78, 26)
+			keyBtn.Position = UDim2.new(1, -90, 0.5, -13)
 			keyBtn.BackgroundColor3 = Theme.Panel
 			keyBtn.BackgroundTransparency = 0.2
-			keyBtn.Text = current.Name == "Unknown" and "None" or current.Name
+			keyBtn.Text = displayName(current)
 			keyBtn.TextColor3 = Theme.Muted
 			keyBtn.TextSize = 11
 			keyBtn.Font = Enum.Font.GothamMedium
@@ -1475,9 +1495,26 @@ function Library:CreateWindow(options)
 			addStroke(keyBtn, Theme.Border, 0.7, 1)
 
 			local listening = false
+			local ignoreNextClick = false
+
+			local function finishBind(bind)
+				current = bind
+				keyBtn.Text = displayName(bind)
+				listening = false
+				tween(keyBtn, 0.15, {
+					BackgroundColor3 = Theme.Panel,
+					TextColor3 = Theme.Muted
+				})
+				if typeof(callback) == "function" then
+					-- Pass KeyCode/UserInputType and a string name for modules that want strings
+					task.spawn(callback, bind, displayName(bind))
+				end
+			end
 
 			keyBtn.MouseButton1Click:Connect(function()
+				if listening then return end
 				listening = true
+				ignoreNextClick = true
 				keyBtn.Text = "..."
 				tween(keyBtn, 0.15, {
 					BackgroundColor3 = Theme.Hover,
@@ -1485,27 +1522,43 @@ function Library:CreateWindow(options)
 				})
 			end)
 
-			UserInputService.InputBegan:Connect(function(input)
+			UserInputService.InputBegan:Connect(function(input, gpe)
 				if not listening then return end
+
+				-- Keyboard
 				if input.UserInputType == Enum.UserInputType.Keyboard then
-					current = input.KeyCode
-					keyBtn.Text = current.Name
-					listening = false
-					tween(keyBtn, 0.15, {
-						BackgroundColor3 = Theme.Panel,
-						TextColor3 = Theme.Muted
-					})
-					if typeof(callback) == "function" then
-						task.spawn(callback, current)
+					-- Escape cancels
+					if input.KeyCode == Enum.KeyCode.Escape then
+						listening = false
+						keyBtn.Text = displayName(current)
+						tween(keyBtn, 0.15, {
+							BackgroundColor3 = Theme.Panel,
+							TextColor3 = Theme.Muted
+						})
+						return
 					end
+					finishBind(input.KeyCode)
+					return
+				end
+
+				-- Mouse buttons (skip the click that opened listening)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.MouseButton2
+					or input.UserInputType == Enum.UserInputType.MouseButton3 then
+					if ignoreNextClick and input.UserInputType == Enum.UserInputType.MouseButton1 then
+						ignoreNextClick = false
+						return
+					end
+					ignoreNextClick = false
+					finishBind(input.UserInputType)
 				end
 			end)
 
 			return {
 				Get = function() return current end,
-				Set = function(_, key)
-					current = key
-					keyBtn.Text = key.Name == "Unknown" and "None" or key.Name
+				Set = function(_, bind)
+					current = bind
+					keyBtn.Text = displayName(bind)
 				end
 			}
 		end
