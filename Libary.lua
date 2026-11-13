@@ -1369,13 +1369,14 @@ function Library:CreateWindow(options)
 				return string.format("%." .. decimals .. "f", v)
 			end
 
-			local holder, stroke = card(page, 54, nextOrder())
+			local holder = card(page, 62, nextOrder())
 
 			label(holder, {
-				Size = UDim2.new(1, -96, 0, 16),
-				Position = UDim2.fromOffset(14, 8),
+				Size = UDim2.new(1, -108, 0, 16),
+				Position = UDim2.fromOffset(14, 9),
 				Text = name,
 				TextSize = 12,
+				Font = Enum.Font.GothamMedium,
 				TextColor3 = Theme.TextDim,
 				TextYAlignment = Enum.TextYAlignment.Center,
 				TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1383,63 +1384,101 @@ function Library:CreateWindow(options)
 
 			local chip = new("Frame", {
 				Name = "Value",
-				Size = UDim2.fromOffset(54, 18),
-				Position = UDim2.new(1, -68, 0, 7),
+				Size = UDim2.fromOffset(64, 20),
+				Position = UDim2.new(1, -78, 0, 6),
 				BackgroundColor3 = Theme.Surface3,
 				BorderSizePixel = 0,
 			}, holder)
-			addCorner(chip, 5)
+			addCorner(chip, 1)
+			local chipStroke = addStroke(chip, Theme.BorderSoft, 0.3, 1)
 
 			local valueLabel = label(chip, {
 				Size = UDim2.new(1, 0, 1, 0),
 				Text = format(value),
 				TextSize = 10,
 				Font = Enum.Font.GothamMedium,
-				TextColor3 = Theme.Accent,
+				TextColor3 = Theme.Text,
 				TextXAlignment = Enum.TextXAlignment.Center,
 				TextYAlignment = Enum.TextYAlignment.Center,
+				TextTruncate = Enum.TextTruncate.AtEnd,
 			})
 
 			local track = new("Frame", {
 				Name = "Track",
-				Size = UDim2.new(1, -28, 0, 4),
-				Position = UDim2.fromOffset(14, 38),
+				Size = UDim2.new(1, -28, 0, 6),
+				Position = UDim2.fromOffset(14, 36),
 				BackgroundColor3 = Theme.Surface3,
 				BorderSizePixel = 0,
 			}, holder)
-			addCorner(track, 2)
+			addCorner(track, 1)
+			local trackStroke = addStroke(track, Theme.BorderSoft, 0.4, 1)
 
 			local fill = new("Frame", {
 				Name = "Fill",
 				Size = UDim2.new((value - minValue) / (maxValue - minValue), 0, 1, 0),
-				BackgroundColor3 = Theme.Accent,
+				BackgroundColor3 = Theme.Text,
 				BorderSizePixel = 0,
 			}, track)
-			addCorner(fill, 2)
+			addCorner(fill, 1)
+			new("UIGradient", {
+				Color = ColorSequence.new(Theme.TextDim, Theme.Text),
+			}, fill)
 
 			local knob = new("Frame", {
 				Name = "Knob",
-				Size = UDim2.fromOffset(12, 12),
+				Size = UDim2.fromOffset(10, 18),
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				Position = UDim2.new((value - minValue) / (maxValue - minValue), 0, 0.5, 0),
-				BackgroundColor3 = Theme.Background,
+				BackgroundColor3 = Theme.Text,
 				BorderSizePixel = 0,
 				ZIndex = 3,
 			}, track)
 			addCorner(knob, 1)
-			addStroke(knob, Theme.Text, 0.1, 1)
+			addStroke(knob, Theme.Background, 0.15, 1)
+
+			new("Frame", {
+				Name = "Grip",
+				Size = UDim2.fromOffset(2, 6),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.new(0.5, 0, 0.5, 0),
+				BackgroundColor3 = Theme.Background,
+				BackgroundTransparency = 0.1,
+				BorderSizePixel = 0,
+				ZIndex = 4,
+			}, knob)
+
+			label(holder, {
+				Size = UDim2.new(0, 60, 0, 11),
+				Position = UDim2.fromOffset(14, 47),
+				Text = format(minValue),
+				TextSize = 9,
+				Font = Enum.Font.GothamMedium,
+				TextColor3 = Theme.TextFaint,
+				TextYAlignment = Enum.TextYAlignment.Center,
+			})
+
+			label(holder, {
+				Size = UDim2.new(0, 60, 0, 11),
+				Position = UDim2.new(1, -74, 0, 47),
+				Text = format(maxValue),
+				TextSize = 9,
+				Font = Enum.Font.GothamMedium,
+				TextColor3 = Theme.TextFaint,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				TextYAlignment = Enum.TextYAlignment.Center,
+			})
 
 			local sliding = false
 			local hovered = false
 
 			local hit = new("TextButton", {
 				Name = "Hit",
-				Size = UDim2.new(1, -28, 0, 22),
-				Position = UDim2.fromOffset(14, 29),
+				Size = UDim2.new(1, -20, 0, 22),
+				Position = UDim2.fromOffset(10, 27),
 				BackgroundTransparency = 1,
 				Text = "",
 				AutoButtonColor = false,
-				ZIndex = 2,
+				ZIndex = 5,
 			}, holder)
 
 			local function update(nextValue, fire)
@@ -1460,29 +1499,42 @@ function Library:CreateWindow(options)
 				update(minValue + relative * (maxValue - minValue), true)
 			end
 
+			local function setHover(on)
+				hovered = on
+				tween(track, 0.16, {
+					BackgroundColor3 = on and Theme.Surface4 or Theme.Surface3,
+				})
+				tween(trackStroke, 0.16, {
+					Color = on and Theme.Border or Theme.BorderSoft,
+					Transparency = on and 0.1 or 0.4,
+				})
+				tween(chipStroke, 0.16, {
+					Color = on and Theme.Border or Theme.BorderSoft,
+					Transparency = on and 0.1 or 0.3,
+				})
+				if not sliding then
+					tween(knob, 0.16, {
+						Size = on and UDim2.fromOffset(12, 20) or UDim2.fromOffset(10, 18),
+					})
+				end
+			end
+
 			hit.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1
 					or input.UserInputType == Enum.UserInputType.Touch then
 					sliding = true
 					fromInput(input)
-					tween(knob, 0.14, { Size = UDim2.fromOffset(16, 16) })
+					tween(knob, 0.12, { Size = UDim2.fromOffset(12, 22) })
+					tween(chip, 0.12, { BackgroundColor3 = Theme.Surface4 })
 				end
 			end)
 
 			hit.MouseEnter:Connect(function()
-				hovered = true
-				tween(track, 0.15, { BackgroundColor3 = Theme.Surface4 })
-				if not sliding then
-					tween(knob, 0.15, { Size = UDim2.fromOffset(14, 14) })
-				end
+				setHover(true)
 			end)
 
 			hit.MouseLeave:Connect(function()
-				hovered = false
-				tween(track, 0.15, { BackgroundColor3 = Theme.Surface3 })
-				if not sliding then
-					tween(knob, 0.15, { Size = UDim2.fromOffset(12, 12) })
-				end
+				setHover(false)
 			end)
 
 			UserInputService.InputChanged:Connect(function(input)
@@ -1496,10 +1548,12 @@ function Library:CreateWindow(options)
 			UserInputService.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1
 					or input.UserInputType == Enum.UserInputType.Touch then
+					if not sliding then return end
 					sliding = false
-					tween(knob, 0.18, {
-						Size = UDim2.fromOffset(hovered and 14 or 12, hovered and 14 or 12),
+					tween(knob, 0.16, {
+						Size = hovered and UDim2.fromOffset(12, 20) or UDim2.fromOffset(10, 18),
 					})
+					tween(chip, 0.16, { BackgroundColor3 = Theme.Surface3 })
 				end
 			end)
 
