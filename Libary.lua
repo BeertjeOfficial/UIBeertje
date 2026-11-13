@@ -15,23 +15,23 @@ Library.__index = Library
 --// Theme -------------------------------------------------------------
 
 local Theme = {
-	Background = Color3.fromRGB(10, 11, 14),
-	Surface    = Color3.fromRGB(15, 16, 21),
-	Surface2   = Color3.fromRGB(20, 22, 28),
-	Surface3   = Color3.fromRGB(27, 30, 37),
-	Surface4   = Color3.fromRGB(36, 39, 48),
-	Border     = Color3.fromRGB(45, 49, 60),
-	BorderSoft = Color3.fromRGB(33, 36, 44),
-	Text       = Color3.fromRGB(238, 240, 246),
-	TextDim    = Color3.fromRGB(158, 163, 176),
-	TextFaint  = Color3.fromRGB(108, 113, 127),
-	Accent     = Color3.fromRGB(236, 183, 96),
-	AccentSoft = Color3.fromRGB(255, 216, 152),
-	OnAccent   = Color3.fromRGB(28, 21, 10),
-	Success    = Color3.fromRGB(110, 206, 152),
-	Warning    = Color3.fromRGB(238, 194, 104),
-	Danger     = Color3.fromRGB(234, 110, 108),
-	Info       = Color3.fromRGB(122, 172, 238),
+	Background = Color3.fromRGB(6, 6, 7),
+	Surface    = Color3.fromRGB(12, 12, 14),
+	Surface2   = Color3.fromRGB(18, 18, 20),
+	Surface3   = Color3.fromRGB(24, 24, 27),
+	Surface4   = Color3.fromRGB(34, 34, 38),
+	Border     = Color3.fromRGB(46, 46, 51),
+	BorderSoft = Color3.fromRGB(30, 30, 34),
+	Text       = Color3.fromRGB(244, 244, 246),
+	TextDim    = Color3.fromRGB(158, 158, 164),
+	TextFaint  = Color3.fromRGB(104, 104, 110),
+	Accent     = Color3.fromRGB(240, 240, 242),
+	AccentSoft = Color3.fromRGB(184, 184, 190),
+	OnAccent   = Color3.fromRGB(10, 10, 12),
+	Success    = Color3.fromRGB(224, 224, 228),
+	Warning    = Color3.fromRGB(196, 196, 202),
+	Danger     = Color3.fromRGB(236, 236, 240),
+	Info       = Color3.fromRGB(170, 170, 178),
 }
 
 function Library:SetAccent(color)
@@ -105,7 +105,7 @@ end
 
 local function addCorner(parent, radius)
 	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, radius or 8)
+	c.CornerRadius = UDim.new(0, math.min(radius or 1, 1))
 	c.Parent = parent
 	return c
 end
@@ -299,20 +299,10 @@ function Library:Notify(opts)
 		BorderSizePixel = 0,
 	}, notif)
 
-	new("Frame", {
-		Name = "Dot",
-		Size = UDim2.fromOffset(6, 6),
-		Position = UDim2.fromOffset(17, 19),
-		BackgroundColor3 = accent,
-		BorderSizePixel = 0,
-		ZIndex = 2,
-	}, notif)
-	addCorner(notif:FindFirstChild("Dot"), 3)
-
 	label(notif, {
 		Name = "Title",
-		Size = UDim2.new(1, -84, 0, 16),
-		Position = UDim2.fromOffset(30, 13),
+		Size = UDim2.new(1, -60, 0, 16),
+		Position = UDim2.fromOffset(18, 13),
 		Text = titleText,
 		TextSize = 13,
 		Font = Enum.Font.GothamBold,
@@ -322,8 +312,8 @@ function Library:Notify(opts)
 	if contentText ~= "" then
 		label(notif, {
 			Name = "Body",
-			Size = UDim2.new(1, -52, 0, contentHeight),
-			Position = UDim2.fromOffset(30, 34),
+			Size = UDim2.new(1, -40, 0, contentHeight),
+			Position = UDim2.fromOffset(18, 34),
 			Text = contentText,
 			TextSize = 12,
 			TextColor3 = Theme.TextDim,
@@ -473,17 +463,17 @@ function Library:CreateWindow(options)
 
 	local topLine = new("Frame", {
 		Name = "TopLine",
-		Size = UDim2.new(1, -96, 0, 2),
-		Position = UDim2.new(0, 48, 0, 0),
+		Size = UDim2.new(1, -36, 0, 1),
+		Position = UDim2.fromOffset(18, 0),
 		BackgroundColor3 = Theme.Accent,
-		BackgroundTransparency = 0.2,
+		BackgroundTransparency = 0.35,
 		BorderSizePixel = 0,
 		ZIndex = 4,
 	}, main)
 	new("UIGradient", {
 		Transparency = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(0.35, 0),
 			NumberSequenceKeypoint.new(1, 1),
 		}),
 	}, topLine)
@@ -494,33 +484,10 @@ function Library:CreateWindow(options)
 		BackgroundTransparency = 1,
 	}, main)
 
-	local logo = new("Frame", {
-		Name = "Logo",
-		Size = UDim2.fromOffset(28, 28),
-		Position = UDim2.new(0, 18, 0, 14),
-		BackgroundColor3 = Theme.Accent,
-		BorderSizePixel = 0,
-	}, titleBar)
-	addCorner(logo, 8)
-	new("UIGradient", {
-		Color = ColorSequence.new(Theme.AccentSoft, Theme.Accent),
-		Rotation = 135,
-	}, logo)
-	label(logo, {
-		Name = "Letter",
-		Size = UDim2.new(1, 0, 1, 0),
-		Text = string.upper(string.sub(displayName, 1, 1)),
-		TextColor3 = Theme.OnAccent,
-		TextSize = 14,
-		Font = Enum.Font.GothamBold,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextYAlignment = Enum.TextYAlignment.Center,
-	})
-
 	local title = label(titleBar, {
 		Name = "Title",
 		Size = UDim2.new(1, -240, 0, 18),
-		Position = UDim2.fromOffset(54, displayTag and 11 or 19),
+		Position = UDim2.fromOffset(18, displayTag and 11 or 19),
 		Text = displayName,
 		TextSize = 14,
 		Font = Enum.Font.GothamBold,
@@ -536,11 +503,11 @@ function Library:CreateWindow(options)
 		tagChip = new("Frame", {
 			Name = "Tag",
 			Size = UDim2.fromOffset(math.floor(tagWidth) + 14, 15),
-			Position = UDim2.fromOffset(54, 29),
+			Position = UDim2.fromOffset(18, 29),
 			BackgroundColor3 = Theme.Surface3,
 			BorderSizePixel = 0,
 		}, titleBar)
-		addCorner(tagChip, 4)
+		addCorner(tagChip, 2)
 		tagLabel = label(tagChip, {
 			Size = UDim2.new(1, 0, 1, 0),
 			Text = tagText,
@@ -599,7 +566,7 @@ function Library:CreateWindow(options)
 		tween(closeBtn, 0.14, {
 			BackgroundColor3 = Theme.Danger,
 			BackgroundTransparency = 0.05,
-			TextColor3 = Color3.new(1, 1, 1),
+			TextColor3 = Theme.OnAccent,
 		})
 	end)
 	closeBtn.MouseLeave:Connect(function()
@@ -772,19 +739,9 @@ function Library:CreateWindow(options)
 		BackgroundTransparency = 1,
 	}, main)
 
-	new("Frame", {
-		Name = "Dot",
-		Size = UDim2.fromOffset(5, 5),
-		Position = UDim2.new(0, 2, 0.5, -2.5),
-		BackgroundColor3 = Theme.Success,
-		BackgroundTransparency = 0.25,
-		BorderSizePixel = 0,
-	}, footer)
-	addCorner(footer:FindFirstChild("Dot"), 3)
-
 	label(footer, {
 		Size = UDim2.new(0.5, -10, 1, 0),
-		Position = UDim2.fromOffset(13, 0),
+		Position = UDim2.fromOffset(2, 0),
 		Text = versionTag,
 		TextSize = 9,
 		Font = Enum.Font.GothamMedium,
@@ -935,16 +892,6 @@ function Library:CreateWindow(options)
 		}, tabBtn)
 		addCorner(indicator, 2)
 
-		local tabDot = new("Frame", {
-			Name = "Dot",
-			Size = UDim2.fromOffset(4, 4),
-			Position = UDim2.new(1, -12, 0.5, -2),
-			BackgroundColor3 = Theme.Accent,
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-		}, tabBtn)
-		addCorner(tabDot, 2)
-
 		local page = new("ScrollingFrame", {
 			Name = name .. "Page",
 			Size = UDim2.new(1, 0, 1, -64),
@@ -1017,7 +964,6 @@ function Library:CreateWindow(options)
 			Label = tabLabel,
 			Stroke = tabStroke,
 			Indicator = indicator,
-			Dot = tabDot,
 			Page = page,
 			Filter = applyFilter,
 		}
@@ -1033,7 +979,6 @@ function Library:CreateWindow(options)
 				})
 				tween(previous.Stroke, 0.2, { Transparency = 1 })
 				tween(previous.Indicator, 0.2, { Size = UDim2.new(0, 2, 0, 0) })
-				tween(previous.Dot, 0.2, { BackgroundTransparency = 1 })
 				previous.Label.TextColor3 = Theme.TextDim
 				previous.Page.Visible = false
 			end
@@ -1042,14 +987,13 @@ function Library:CreateWindow(options)
 
 			tween(tabBtn, 0.22, {
 				BackgroundColor3 = Theme.Accent,
-				BackgroundTransparency = 0.92,
+				BackgroundTransparency = 0.86,
 			})
 			tween(tabStroke, 0.22, {
 				Color = Theme.Accent,
-				Transparency = 0.8,
+				Transparency = 0.72,
 			})
 			tween(indicator, 0.28, { Size = UDim2.new(0, 2, 0, 14) })
-			tween(tabDot, 0.22, { BackgroundTransparency = 0 })
 			tabLabel.TextColor3 = Theme.Text
 
 			page.CanvasPosition = Vector2.new(0, 0)
@@ -1212,44 +1156,75 @@ function Library:CreateWindow(options)
 				})
 			end
 
-			local track = new("Frame", {
-				Name = "Track",
-				Size = UDim2.fromOffset(36, 20),
-				Position = UDim2.new(1, -50, 0.5, -10),
-				BackgroundColor3 = state and Theme.Accent or Theme.Surface4,
+			local box = new("Frame", {
+				Name = "Checkbox",
+				Size = UDim2.fromOffset(16, 16),
+				Position = UDim2.new(1, -30, 0.5, -8),
+				BackgroundColor3 = state and Theme.Accent or Theme.Surface3,
+				BackgroundTransparency = state and 0 or 0.15,
 				BorderSizePixel = 0,
 			}, holder)
-			addCorner(track, 10)
-			local trackStroke = addStroke(track, state and Theme.Accent or Theme.Border, state and 0.6 or 0.35, 1)
+			addCorner(box, 1)
+			local boxStroke = addStroke(
+				box,
+				state and Theme.Accent or Theme.Border,
+				state and 0.2 or 0.3,
+				1
+			)
 
-			local knob = new("Frame", {
-				Name = "Knob",
-				Size = UDim2.fromOffset(14, 14),
-				Position = state and UDim2.new(1, -17, 0, 3) or UDim2.fromOffset(3, 3),
-				BackgroundColor3 = state and Theme.OnAccent or Theme.TextDim,
+			local markShort = new("Frame", {
+				Name = "MarkShort",
+				Size = UDim2.fromOffset(6, 2),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromOffset(5, 10),
+				Rotation = 45,
+				BackgroundColor3 = Theme.OnAccent,
+				BackgroundTransparency = state and 0 or 1,
 				BorderSizePixel = 0,
-			}, track)
-			addCorner(knob, 7)
-			addStroke(knob, Theme.Background, 0.55, 1)
+				ZIndex = 2,
+			}, box)
+			addCorner(markShort, 1)
+
+			local markLong = new("Frame", {
+				Name = "MarkLong",
+				Size = UDim2.fromOffset(10, 2),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromOffset(10, 8),
+				Rotation = -45,
+				BackgroundColor3 = Theme.OnAccent,
+				BackgroundTransparency = state and 0 or 1,
+				BorderSizePixel = 0,
+				ZIndex = 2,
+			}, box)
+			addCorner(markLong, 1)
 
 			local function render(animate, silent)
+				local fill = state and Theme.Accent or Theme.Surface3
+				local fillAlpha = state and 0 or 0.15
+				local edge = state and Theme.Accent or Theme.Border
+				local edgeAlpha = state and 1 or 0.3
+				local markAlpha = state and 0 or 1
+
 				if animate then
-					tween(track, 0.2, {
-						BackgroundColor3 = state and Theme.Accent or Theme.Surface4,
+					tween(box, 0.16, {
+						BackgroundColor3 = fill,
+						BackgroundTransparency = fillAlpha,
 					})
-					tween(trackStroke, 0.2, {
-						Color = state and Theme.Accent or Theme.Border,
-						Transparency = state and 0.6 or 0.35,
+					tween(boxStroke, 0.16, {
+						Color = edge,
+						Transparency = edgeAlpha,
 					})
-					tween(knob, 0.26, {
-						Position = state and UDim2.new(1, -17, 0, 3) or UDim2.fromOffset(3, 3),
-						BackgroundColor3 = state and Theme.OnAccent or Theme.TextDim,
-					}, Enum.EasingStyle.Back)
+					tween(markShort, 0.14, { BackgroundTransparency = markAlpha })
+					tween(markLong, 0.14, { BackgroundTransparency = markAlpha })
 				else
-					track.BackgroundColor3 = state and Theme.Accent or Theme.Surface4
-					knob.Position = state and UDim2.new(1, -17, 0, 3) or UDim2.fromOffset(3, 3)
-					knob.BackgroundColor3 = state and Theme.OnAccent or Theme.TextDim
+					box.BackgroundColor3 = fill
+					box.BackgroundTransparency = fillAlpha
+					boxStroke.Color = edge
+					boxStroke.Transparency = edgeAlpha
+					markShort.BackgroundTransparency = markAlpha
+					markLong.BackgroundTransparency = markAlpha
 				end
+
 				if not silent and typeof(callback) == "function" then
 					task.spawn(callback, state)
 				end
@@ -1441,21 +1416,18 @@ function Library:CreateWindow(options)
 				BorderSizePixel = 0,
 			}, track)
 			addCorner(fill, 2)
-			new("UIGradient", {
-				Color = ColorSequence.new(Theme.Accent, Theme.AccentSoft),
-			}, fill)
 
 			local knob = new("Frame", {
 				Name = "Knob",
 				Size = UDim2.fromOffset(12, 12),
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				Position = UDim2.new((value - minValue) / (maxValue - minValue), 0, 0.5, 0),
-				BackgroundColor3 = Theme.Accent,
+				BackgroundColor3 = Theme.Background,
 				BorderSizePixel = 0,
 				ZIndex = 3,
 			}, track)
-			addCorner(knob, 6)
-			addStroke(knob, Theme.Background, 0.4, 2)
+			addCorner(knob, 1)
+			addStroke(knob, Theme.Text, 0.1, 1)
 
 			local sliding = false
 			local hovered = false
@@ -2205,8 +2177,8 @@ function Library:CreateWindow(options)
 					local view = views[index]
 					if view then
 						local active = option == selected
-						view.label.TextColor3 = active and Theme.Accent or Theme.TextDim
-						view.dot.Visible = active
+						view.label.TextColor3 = active and Theme.Text or Theme.TextDim
+						view.label.Font = active and Enum.Font.GothamBold or Enum.Font.Gotham
 					end
 				end
 			end
@@ -2233,16 +2205,7 @@ function Library:CreateWindow(options)
 					TextTruncate = Enum.TextTruncate.AtEnd,
 				})
 
-				local optionDot = new("Frame", {
-					Size = UDim2.fromOffset(4, 4),
-					Position = UDim2.new(1, -12, 0.5, -2),
-					BackgroundColor3 = Theme.Accent,
-					BorderSizePixel = 0,
-					Visible = false,
-				}, row)
-				addCorner(optionDot, 2)
-
-				views[index] = { label = optionLabel, dot = optionDot }
+				views[index] = { label = optionLabel }
 
 				row.MouseEnter:Connect(function()
 					optionLabel.TextColor3 = Theme.Text
@@ -2385,9 +2348,6 @@ function Library:CreateWindow(options)
 				BorderSizePixel = 0,
 			}, track)
 			addCorner(fill, 3)
-			new("UIGradient", {
-				Color = ColorSequence.new(Theme.Accent, Theme.AccentSoft),
-			}, fill)
 
 			register(holder, name, "item")
 
@@ -2473,3 +2433,10 @@ function Library:CreateWindow(options)
 end
 
 return Library
+
+
+
+
+
+
+
